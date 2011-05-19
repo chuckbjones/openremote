@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <script>
+      var callbackResponse = '';
+      function sendURLToRemoteBrowser(pageUrl) {
+        var server_url = localStorage["server_url"];
+        if (server_url) {
+          var xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+              if (xhr.status == 200) {
+                var data = xhr.responseText;
+                callbackResponse = data;
+              } else {
+                callbackResponse = "Failed to send url to remote browser.";
+              }
+              chrome.tabs.executeScript(null, {file: "contentscript.js"});
+            }
+          }        
+          
+          var url = server_url.replace('%s', encodeURIComponent(pageUrl));
+          xhr.open('GET', url, true);
+          xhr.send();
+        }
+      };
+
+      /**
+       * Create a context menu for the entire page.
+       */
+      var menu_text = localStorage["menu_text"];
+      if (!menu_text) {
+        menu_text = "Open %s in Remote Browser";
+      }      
+      chrome.contextMenus.create({
+        "title" : menu_text.replace('%s', "Page"),
+        "type" : "normal",
+        "contexts" : ["page"],
+        "onclick" : function(info, tab) {
+           sendURLToRemoteBrowser(info.pageUrl);                  
+         }
+      });
+      
+      chrome.contextMenus.create({
+        "title" : menu_text.replace('%s', "Link"),
+        "type" : "normal",
+        "contexts" : ["link"],
+        "onclick" : function(info, tab) {
+           sendURLToRemoteBrowser(info.linkUrl);                  
+         }
+      });
+
+      chrome.contextMenus.create({
+        "title" : menu_text.replace('%s', "Image"),
+        "type" : "normal",
+        "contexts" : ["image"],
+        "onclick" : function(info, tab) {
+           sendURLToRemoteBrowser(info.srcUrl);                  
+         }
+      });
+
+      chrome.contextMenus.create({
+        "title" : menu_text.replace('%s', "Video"),
+        "type" : "normal",
+        "contexts" : ["video"],
+        "onclick" : function(info, tab) {
+           sendURLToRemoteBrowser(info.srcUrl);                  
+         }
+      });
+
+      chrome.contextMenus.create({
+        "title" : menu_text.replace('%s', "Audio"),
+        "type" : "normal",
+        "contexts" : ["audio"],
+        "onclick" : function(info, tab) {
+           sendURLToRemoteBrowser(info.srcUrl);                  
+         }
+      });
+
+      function onRequest(request, sender, callback) {
+        if (request.action == 'getRemoteBrowserResponse') {
+          callback(callbackResponse);
+        }
+      };
+
+      // Wire up the listener.
+      chrome.extension.onRequest.addListener(onRequest);
+    </script>
+  </body>
+</html>

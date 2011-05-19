@@ -1,0 +1,19 @@
+{
+  "name" : "OpenRemote",
+  "version" : "0.1.0",
+  "description" : "Open a url in a remote browser",
+  "background_page" : "background.html",
+  "options_page": "options.html",
+  "permissions" : [
+    "contextMenus",
+    "tabs",
+    "http://*/*",
+    "https://*/*"
+   ],
+  "minimum_chrome_version" : "6.0.0.0",
+  "icons" : {
+    "16" : "openremote-16.png",
+    "48" : "openremote-48.png",
+    "128" : "openremote-128.png"
+  }
+}

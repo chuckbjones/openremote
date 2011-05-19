@@ -1,0 +1,162 @@
+<html>
+<head><title>OpenRemote Options</title></head>
+
+<style>
+  body {
+    background-color: #333377; 
+    font-family: sans-serif;   
+    font-size: 13px;
+  }
+  
+  #container {
+    background-color: white;
+    width: 970px;
+    margin: auto;
+    padding: 10px;
+    border-radius: 10px;
+    min-height: 700px;
+  }
+  
+  #contents {
+    clear: both;
+  }
+  
+  #version_string {
+    float: right;
+  }
+  
+  #status {
+   color: green; 
+  }
+  
+  h1 {
+    font-weight: normal;
+    margin-bottom: 1em;
+    padding-bottom: 1em;
+  }
+  
+  .icon {
+    background: url("openremote-48.png") no-repeat;
+    padding-left: 55px;
+    padding-top: 5px;
+  }
+  
+  h3 {
+    font-size: 115%;
+    font-weight: bold;
+    margin: 0;
+    vertical-align: middle;
+    width: 200px;
+  }
+
+  section {
+    -webkit-box-orient: horizontal;
+    border-bottom: 1px solid #EEE;
+    display: -webkit-box;
+    margin-top: 17px;
+    padding-bottom: 20px;
+  }
+  
+  input {
+    font-size: 103%;
+  }
+  
+  .code {
+    font-style: italic;
+    color: #666;
+  }
+  
+  .instructions {
+    display: block;
+    font-size: 100%;
+    color: #2A2A5A;
+  }
+</style>
+
+<script type="text/javascript">
+
+// Saves options to localStorage.
+function save_options() {
+  localStorage["server_url"] = document.getElementById("server_url").value;
+  localStorage["menu_text"] = document.getElementById("menu_text").value;
+
+  // Update status to let user know options were saved.
+  var status = document.getElementById("status");
+  status.innerHTML = "Options Saved.";
+  setTimeout(function() {
+    status.innerHTML = "";
+  }, 750);
+}
+
+// Restores select box state to saved value from localStorage.
+function restore_options() {
+  var server_url = localStorage["server_url"];
+  if (server_url) {
+    document.getElementById("server_url").value = server_url;
+  }
+  var menu_text = localStorage["menu_text"];
+  if (menu_text) {
+    document.getElementById("menu_text").value = menu_text;
+  }
+}
+
+function display_version() {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", chrome.extension.getURL('manifest.json'), false);
+    xhr.onreadystatechange = function() {
+      if(this.readyState == 4) {
+        var theManifest = JSON.parse(this.responseText);
+        document.getElementById("version_string").innerHTML = "Version " + theManifest.version;
+      }
+    };
+    xhr.send();
+  } catch (ex) {} // silently fail
+}
+
+function do_onload() {
+  display_version();
+  restore_options();
+}
+
+</script>
+
+<body onload="do_onload()">
+  <div id="container">
+    <div id="version_string"></div>
+
+    <h1 class="icon">OpenRemote Options</h1>
+    
+  
+    <div id="contents">
+      <section>
+        <h3 >Remote Server URL </h3>
+        <div>
+          <input id="server_url" type="text" size="50" />
+          <div class="instructions">
+            <p>This is the full URL to the remote server that will open the links.</p>
+            <p>Use <strong>%s</strong> as a placeholder for the URL of the page to open.</p>
+            <p>Example: <span class="code">http://192.168.1.17:8080/openurl?url=<strong>%s</strong></span></p>
+          </div>
+        </div>
+      </section>
+      
+      <section>
+        <h3>Context Menu Text</h3>
+        <div>
+          <input id="menu_text" type="text" size="50"/>
+          <div class="instructions">
+            <p>This is the text to display in the context menu when you right click on a link.</p>
+            <p>Use <strong>%s</strong> as a placeholder for the context of the URL to open (eg. Image, Link or Page).</p>
+            <p>The default is 'Open <strong>%s</strong> in Remote Browser'</p>
+          </div>
+        </div>
+      </section>
+      
+      <br>
+      <button onclick="save_options()">Save</button>
+      <span id="status"></span>
+    </div>
+  </div>
+</body>
+</html>
