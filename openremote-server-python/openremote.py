@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-import sys
 import re
-import subprocess
+import webbrowser
 import urlparse
 import platform
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -15,12 +14,11 @@ class OpenRemoteHandler(BaseHTTPRequestHandler):
             if re.search('openurl', request_url.path):
                 query = urlparse.parse_qs(request_url.query)            
                 url = query["url"][0]
-                subprocess.check_call(["xdg-open", url])
-    
+                webbrowser.open_new_tab(url) 
                 self.send_response(200)
                 self.send_header('Content-type', 'text/plain')
                 self.end_headers()
-                self.wfile.write("Opened %s on %s" % (url, platform.node()))           
+                self.wfile.write("Opened %s on %s" % (url, platform.node()))    
             else:
                 self.send_error(404)
         except:
