@@ -2,10 +2,9 @@ TODO
 
 Extension:
 * options - allow multiple hosts/setups
-* ssh
 
 Server:
-* linux version
-* windows version
+* configure port number
 * options (open full screen, play video/audio automatically, open in incognito window)
-* installation package
+* ability to run as daemon/startup item
+* installation packages for Windows, Linux, and OS X
