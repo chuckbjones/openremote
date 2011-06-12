@@ -6,5 +6,8 @@ Extension:
 Server:
 * configure port number
 * options (open full screen, play video/audio automatically, open in incognito window)
-* ability to run as daemon/startup item
+* Run in menubar on OS X 
+* ability to run as startup item
 * installation packages for Windows, Linux, and OS X
+* Windows: py2exe - http://wiki.wxpython.org/index.cgi/DistributingYourApplication
+* OS X: py2app - http://wiki.wxpython.org/Optimizing%20for%20Mac%20OS%20X
