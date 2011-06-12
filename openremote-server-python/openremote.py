@@ -8,6 +8,8 @@ import platform
 import threading
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
+DEFAULT_PORT=8080
+
 TOGGLE_SERVER=wx.NewId()
 SERVER_STATUS=wx.NewId()
 OPEN_PREFS=wx.NewId()
@@ -29,24 +31,79 @@ class OpenRemoteFrame(wx.Frame):
         sys.exit()    
         
     def OpenPreferences(self,event=None):
-        pass    
+        prefsDlg = PreferencesDialog(self, -1, 'OpenRemote')
+        prefsDlg.ShowModal()
+        prefsDlg.Destroy()    
     
-    def ToggleServer(self,event=None):  
-        if self.server is None:
-            self.server = HTTPServer(('', 8080), OpenRemoteHandler)
-            server_thread = threading.Thread(target=self.server.serve_forever)
-            server_thread.setDaemon(True)
-            server_thread.start()
-            self.tbicon.menu.SetLabel(TOGGLE_SERVER, "Stop Server")
-            self.tbicon.menu.SetHelpString(TOGGLE_SERVER, "Stop listening for remote URLs.")
-            self.tbicon.menu.SetLabel(SERVER_STATUS, "Server listening on port 8080") 
-        else:
+    def ServerRunning(self):
+        return self.server is not None
+    
+    def StartServer(self):
+        self.StopServer()
+        cfg = wx.Config('openremote')
+        port = cfg.ReadInt('port', DEFAULT_PORT)
+        self.server = HTTPServer(('', port), OpenRemoteHandler)
+        server_thread = threading.Thread(target=self.server.serve_forever)
+        server_thread.setDaemon(True)
+        server_thread.start()
+        self.tbicon.menu.SetLabel(TOGGLE_SERVER, "Stop Server")
+        self.tbicon.menu.SetHelpString(TOGGLE_SERVER, "Stop listening for remote URLs.")
+        self.tbicon.menu.SetLabel(SERVER_STATUS, "Server listening on port %d" % port) 
+     
+    def StopServer(self):
+        if self.server is not None:
             self.server.shutdown()
             self.server = None
             self.tbicon.menu.SetLabel(TOGGLE_SERVER, "Start Server")
             self.tbicon.menu.SetHelpString(TOGGLE_SERVER, "Start listening for remote URLs.")
             self.tbicon.menu.SetLabel(SERVER_STATUS, "Server not running") 
+           
+    def ToggleServer(self,event=None):  
+        if self.ServerRunning():
+            self.StopServer()
+        else:
+            self.StartServer()
 
+class PreferencesDialog(wx.Dialog):
+    def __init__(self, parent, id, title):
+        wx.Dialog.__init__(self, parent, id, title, size=(250, 200))
+        self.parentApp = parent 
+        
+        panel = wx.Panel(self, -1)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        wx.StaticBox(panel, -1, 'Preferences', (5, 5), (240, 100))
+                
+        wx.StaticText(panel, -1, 'Port:', (30, 35))
+        cfg = wx.Config('openremote')
+        oldPort = cfg.ReadInt('port', DEFAULT_PORT)
+        self.portCtrl = wx.TextCtrl(panel, -1, value=str(oldPort), name='port', pos=(65, 30))
+                
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        closeButton = wx.Button(self, wx.ID_OK, 'Close', size=(80, 30))
+        closeButton.Bind(wx.EVT_BUTTON, self.onSave)
+        hbox.Add(closeButton, 1, wx.RIGHT, 5)
+        
+        vbox.Add(panel)
+        vbox.Add(hbox, 1, wx.ALIGN_RIGHT | wx.TOP | wx.BOTTOM, 10)
+        
+        self.SetSizer(vbox)
+
+    def onSave(self,event=None):
+        cfg = wx.Config('openremote')
+        oldPort = cfg.ReadInt('port', DEFAULT_PORT)
+        try:
+            newPort = int(self.portCtrl.GetValue())
+            if newPort != oldPort:
+              cfg.WriteInt("port", newPort)
+              cfg.Flush()
+              if self.parentApp.ServerRunning():              
+                  self.parentApp.StartServer()
+        except:
+            pass
+            
+        self.EndModal(0)
+        
 class MailTaskBarIcon(wx.TaskBarIcon):  
 
     def __init__(self, parent):  
